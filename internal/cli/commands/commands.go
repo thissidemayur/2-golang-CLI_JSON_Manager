@@ -1,15 +1,31 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
-	"github.com/thissidemayur/cli-json-manager/internal/storage"
 	"github.com/thissidemayur/cli-json-manager/internal/types"
 )
 
+// Manager struct to handle records
+type Manager struct {
+	fileName string
+}
+
+// NewManager creates a new Manager instance(constructor)
+func NewManager(fileName string) *Manager {
+	return &Manager{fileName: fileName}
+}
+
 // add a new record
-func AddRecord(name *string) {
-	records := storage.ReadRecord()
+func (m *Manager) AddRecord(name *string) {
+	records, err := m.ReadRecord()
+	if err != nil {
+		fmt.Println("❌ Error reading records:", err)
+		return
+	}
+
 	newRecord := types.Record{
 		ID:   len(records),
 		Name: *name,
@@ -18,17 +34,21 @@ func AddRecord(name *string) {
 	records = append(records, newRecord)
 
 	// marshal (convert go to json)
-	storage.SaveRecords(records)
+	m.SaveRecords(records)
 
 	fmt.Println("✅ Record added successfully!")
 }
 
 // read all records
-func ListRecord(){
-	 records:= storage.ReadRecord()
-	 if len(records) == 0{
-		fmt.Println("ℹ️ No records found.")
-		return
+func (m* Manager) ListRecord(){
+	 records, err := m.ReadRecord()
+	 if err != nil {
+		 fmt.Println("❌ Error reading records:", err)
+		 return
+	 }
+	 if len(records) == 0 {
+		 fmt.Println("ℹ️ No records found in ", m.fileName)
+		 return
 	 }
 
 	 fmt.Println("📋 List of Records:")
@@ -38,11 +58,11 @@ func ListRecord(){
 }
 
 // delete  a record
-func DeleteRecord(id int){	
-records := storage.ReadRecord()
-	if len(records) == 0 {
-		fmt.Println("ℹ️ No records found to delete.")
-		return;
+func (m *Manager) DeleteRecord(id int){	
+records, err := m.ReadRecord()
+	if err != nil {
+		fmt.Println("❌ Error reading records:", err)
+		return
 	}
 
 	found := false
@@ -67,16 +87,20 @@ records := storage.ReadRecord()
 	}
 
 	// marshal (convert go to json)
-	storage.SaveRecords(newRecord)
+	m.SaveRecords(newRecord)
 
 	fmt.Printf("🗑️  Deleted record with ID %d\n", id)
 }
 
 // update a record
-func UpdateRecord(id int,newName string){
-	records := storage.ReadRecord()
+func (m *Manager) UpdateRecord(id int, newName string) {
+	records, err := m.ReadRecord()
+	if err != nil {
+		fmt.Println("❌ Error reading records:", err)
+		return
+	}
 	if len(records) == 0 {
-		fmt.Println("ℹ️  No records found to update.")
+		fmt.Println(" 📂No records found.", m.fileName)
 		return
 	}
 	found := false
@@ -94,13 +118,62 @@ func UpdateRecord(id int,newName string){
 	}
 	
 	// marshal (convert go to json)
-	storage.SaveRecords(records)
+	m.SaveRecords(records)
 	fmt.Printf("✏️  Updated record ID %d → New Name: %s\n", id, newName)
 
 }
 
-/*
-	os.Args[0] -> programe name/path
-	os.Args[1] -> first argument- the subcommand(add,list)
-	os.Args[2] -> the rest of the flag or parameter (eg -name Mayur)
-*/
+// ensure file exists
+func (m *Manager) EnsureFile() error {
+	_, err := os.Stat(m.fileName)
+	if os.IsNotExist(err) {
+		file, err := os.Create(m.fileName)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		file.Write([]byte("[]")) // initialize with empty JSON array	
+	}
+	return nil
+}
+
+// read records from file
+func (m *Manager) ReadRecord() ([]types.Record , error) {
+	if err := m.EnsureFile(); err != nil {
+		return nil , err
+	}
+
+	// get file data	
+	data, err := os.ReadFile(m.fileName)
+	if err != nil {
+		fmt.Println("❌ Error reading file:", err)
+		return nil, err
+	}
+
+	var people []types.Record
+	// unmarshal (convert json to go)
+	if err := json.Unmarshal(data, &people); err != nil {
+		fmt.Println("❌ Error unmarshalling data:", err)
+		return nil, err
+	}
+	return people, nil
+
+}
+
+
+func (m *Manager) SaveRecords(records []types.Record) error {
+	// marshal (convert go to json)
+	data, err := json.MarshalIndent(records, "", " ")
+	if err != nil {
+		fmt.Println("❌ Error marshalling data:", err)
+		return err
+	}
+	
+	// write to json file
+	if err := os.WriteFile(m.fileName, data, 0644); err != nil {
+		fmt.Println("❌ Error writing file:", err)
+		return err
+	}
+	return nil
+}
+

@@ -12,16 +12,30 @@ import (
 func main(){
 	// CLI Commands
 	addCmd := flag.NewFlagSet("add" , flag.ExitOnError)
-	name:= addCmd.String("name","","Name to add")
-
 	listCmd := flag.NewFlagSet("list",flag.ExitOnError)
-
 	deleteCmd := flag.NewFlagSet("delete",flag.ExitOnError)
+	updateCmd := flag.NewFlagSet("update",flag.ExitOnError)
+
+	// shared flag across commands
+	fileFlag := "data.json"
+
+
+	// add command flags
+	name:= addCmd.String("name","","Name to add")
+	addFile := addCmd.String("file",fileFlag,"JSON file to store data")
+
+	// list command flags
+	listFile := listCmd.String("file",fileFlag,"JSON file to store data")
+
+	// delete command flags
+	deleteFile := deleteCmd.String("file",fileFlag,"JSON file to store data")	
 	deleteId := deleteCmd.Int("id",0,"Id to delete")
 
-	updateCmd := flag.NewFlagSet("update",flag.ExitOnError)
+	// update command flags
+	updateFile := updateCmd.String("file",fileFlag,"JSON file to store data")
 	updateId := updateCmd.Int("id",0,"Id to update")
 	updateName := updateCmd.String("name","","New Name")
+
 	// ensure subcommand are provided
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: cli-json-manager <command> [options] <value>")
@@ -37,11 +51,11 @@ func main(){
 			fmt.Println("❌ Name is required. Usage: cli-json-manager add -name <name>")
 			return;
 		} 
-		commands.AddRecord(name)
+		commands.NewManager(*addFile).AddRecord(name)
 
 	case "list":
 		listCmd.Parse(os.Args[2:])
-		commands.ListRecord()
+		commands.NewManager(*listFile).ListRecord()
 
 	case "delete":
 		deleteCmd.Parse(os.Args[2:])
@@ -49,7 +63,7 @@ func main(){
 			fmt.Println("❌ ID is required. Usage: cli-json-manager delete -id <id>")
 			return;
 		}
-		commands.DeleteRecord(*deleteId)
+		commands.NewManager(*deleteFile).DeleteRecord(*deleteId)
 
 	case "update":
 		updateCmd.Parse(os.Args[2:])
@@ -63,7 +77,7 @@ func main(){
 			return;
 		
 		}
-		commands.UpdateRecord(*updateId,*updateName)
+		commands.NewManager(*updateFile).UpdateRecord(*updateId,*updateName)
 
 	default:
 		fmt.Println("❌ Unknown command: ",os.Args[1],	" Available commands: add, list, delete, update")
