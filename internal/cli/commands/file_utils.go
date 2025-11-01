@@ -19,18 +19,18 @@ func (m *Manager) EnsureFile() error {
 			return err
 		}
 		defer file.Close()
-		file.Write([]byte("[]")) // initialize  empty JSON array	
+		file.Write([]byte("[]")) // initialize  empty JSON array
 	}
 	return nil
 }
 
 // read records from file
-func (m *Manager) ReadRecord() ([]types.Record , error) {
+func (m *Manager) ReadRecord() ([]types.Record, error) {
 	if err := m.EnsureFile(); err != nil {
-		return nil , err
+		return nil, err
 	}
 
-	// get file data	
+	// get file data
 	data, err := os.ReadFile(m.fileName)
 	if err != nil {
 		return nil, fmt.Errorf("❌ Error reading file: %w", err)
@@ -53,11 +53,10 @@ func (m *Manager) SaveRecords(records []types.Record) error {
 		fmt.Println("❌ Error marshalling data:", err)
 		return err
 	}
-	
+
 	// write to json file
 	if err := os.WriteFile(m.fileName, data, 0644); err != nil {
 		return fmt.Errorf("❌ Error writing file: %w", err)
 	}
 	return nil
 }
-

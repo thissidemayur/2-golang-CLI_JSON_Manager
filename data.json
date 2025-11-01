@@ -1,52 +1,10 @@
 [
- 
-{
- 
-
-"id": 1,
- 
-
-"name": "bhawaniputra"
- 
-},
- 
-{
- 
-
-"id": 2,
- 
-
-"name": "shambhu"
- 
-},
- 
-{
- 
-
-"id": 3,
- 
-
-"name": "parvati"
- 
-},
- 
-{
- 
-
-"id": 4,
- 
-
-"name": "dev"
- 
-},
- 
-{
- 
-
-"id": 5,
- 
-
-"name": "kapali"
- 
-}
- ]
+ {
+  "id": 1,
+  "name": "bhawaniputra"
+ },
+ {
+  "id": 2,
+  "name": "shubham"
+ }
+]

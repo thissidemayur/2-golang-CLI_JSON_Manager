@@ -34,19 +34,19 @@ func (m *Manager) AddRecord(name *string) error {
 // read all records
 func (m *Manager) ListRecord() error {
 	records, err := m.ReadRecord()
-	 if err != nil {
-		 return err
-	 }
-	 if len(records) == 0 {
-		 fmt.Printf("ℹ️ No records found in %q\n	", m.fileName)
-		 return nil
-	 }
+	if err != nil {
+		return err
+	}
+	if len(records) == 0 {
+		fmt.Printf("ℹ️ No records found in %q\n	", m.fileName)
+		return nil
+	}
 
-	 fmt.Println("📋 List of Records:")
-	 for _, record := range records {
-		 fmt.Printf("  - ID: %d, Name: %s\n", record.ID, record.Name)
-	 }
-	 return nil
+	fmt.Println("📋 List of Records:")
+	for _, record := range records {
+		fmt.Printf("  - ID: %d, Name: %s\n", record.ID, record.Name)
+	}
+	return nil
 }
 
 // delete  a record
@@ -57,22 +57,22 @@ func (m *Manager) DeleteRecord(id int) error {
 
 	records, err := m.ReadRecord()
 	if err != nil {
-return err
+		return err
 	}
 
 	found := false
-	newRecord := [] types.Record{}
-	for _,record := range records {
+	newRecord := []types.Record{}
+	for _, record := range records {
 		if record.ID == id {
 			found = true
 			continue
-		} else{
+		} else {
 			newRecord = append(newRecord, record)
 		}
 	}
 
 	if !found {
-		 return ErrNotFound
+		return ErrNotFound
 	}
 
 	// reassign IDs (so they remain sequential)
@@ -100,7 +100,7 @@ func (m *Manager) UpdateRecord(id int, newName string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	found := false
 	for i, r := range records {
 		if r.ID == id {
@@ -113,9 +113,9 @@ func (m *Manager) UpdateRecord(id int, newName string) error {
 	if !found {
 		return ErrNotFound
 	}
-	
+
 	// marshal (convert go to json)
-	if err:=m.SaveRecords(records); err != nil {
+	if err := m.SaveRecords(records); err != nil {
 		return err
 	}
 	fmt.Printf("✏️  Updated record ID %d → New Name: %s\n", id, newName)
