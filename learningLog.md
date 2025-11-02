@@ -37,6 +37,20 @@
 - Print user-friendly error messages.
 - Return early when error occurs to keep flow clean.
 
+### testing
+ - go has a built-in testing tool- no external linareires needed
+ - *_test.go --- any file ending in _test.go is recoginzed by Go's test runner.
+ - `t *testing.T: ` its like "mini test engine" passed into each step:
+    - log messages
+    - fail test gracefully 
+    - stop tests immediatley
+    
+    - eg : ```
+    t.Log("this is a log message")       // prints info
+t.Error("something went wrong")      // marks test failed but continues
+t.Errorf("expected %d, got %d", 1,2) // formatted version
+t.Fatal("stop test immediately")     // fails and stops test here
+```
 ---
 
 ## 💡 Reflection
@@ -45,3 +59,14 @@ This project taught me how to structure a small Go application like a profession
 - CLI design using `flag`
 - CRUD logic using JSON as file storage
 - Separation of logic (`commands.Manager`) and entrypoint (`main.go`)
+
+
+
+/*
+Exit codes of os.Exit(): 
+0 -> ✅success
+1 -> ❌ general error (missing command, unknown command)
+2 -> ❌ Bad usage, incorrect command syntax [command-specific error (missing flags, invalid input)]
+3 -> ❌ Runtime error [manager creation error (file issues, etc.)]
+4 -> ❌ Operation-specific error (add, delete, update failures)
+*/

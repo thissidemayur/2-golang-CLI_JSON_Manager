@@ -56,7 +56,8 @@ func main() {
 			fmt.Println("❌ Error creating manager:", err)
 			os.Exit(3)
 		}
-		if err := mgr.ListRecord(); err != nil {
+		_, err = mgr.ListRecord();
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(3)
 		}
@@ -101,12 +102,3 @@ func main() {
 
 	}
 }
-
-/*
-Exit codes:
-0 -> ✅success
-1 -> ❌ general error (missing command, unknown command)
-2 -> ❌ Bad usage, incorrect command syntax [command-specific error (missing flags, invalid input)]
-3 -> ❌ Runtime error [manager creation error (file issues, etc.)]
-4 -> ❌ Operation-specific error (add, delete, update failures)
-*/
