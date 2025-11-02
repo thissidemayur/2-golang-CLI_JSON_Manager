@@ -36,6 +36,11 @@ func (m *Manager) ReadRecord() ([]types.Record, error) {
 		return nil, fmt.Errorf("❌ Error reading file: %w", err)
 	}
 
+	// handle empty file
+	if len(data) == 0 {
+		return []types.Record{},nil
+	}
+
 	var people []types.Record
 	// unmarshal (convert json to go)
 	if err := json.Unmarshal(data, &people); err != nil {

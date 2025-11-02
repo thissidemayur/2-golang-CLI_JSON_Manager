@@ -32,24 +32,22 @@ func (m *Manager) AddRecord(name *string) error {
 }
 
 // read all records
-func (m *Manager) ListRecord() error {
+func (m *Manager) ListRecord() ([]types.Record, error) {
 	records, err := m.ReadRecord()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(records) == 0 {
 		fmt.Printf("ℹ️ No records found in %q\n	", m.fileName)
-		return nil
+		return nil, nil
 	}
 
 	fmt.Println("📋 List of Records:")
 	for _, record := range records {
 		fmt.Printf("  - ID: %d, Name: %s\n", record.ID, record.Name)
 	}
-	return nil
+	return records, nil
 }
-
-// delete  a record
 func (m *Manager) DeleteRecord(id int) error {
 	if id <= 0 {
 		return ErrInvalidId
