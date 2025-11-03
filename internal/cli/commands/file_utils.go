@@ -38,7 +38,7 @@ func (m *Manager) ReadRecord() ([]types.Record, error) {
 
 	// handle empty file
 	if len(data) == 0 {
-		return []types.Record{},nil
+		return []types.Record{}, nil
 	}
 
 	var people []types.Record

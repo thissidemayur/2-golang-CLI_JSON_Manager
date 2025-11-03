@@ -1,107 +1,114 @@
 package commands
 
 import (
-	"fmt"
-
+	logger "github.com/thissidemayur/cli-json-manager"
 	"github.com/thissidemayur/cli-json-manager/internal/types"
 )
 
-//  ========================== CRUD on File  ==========================
+// ========================== CRUD OPERATIONS ==========================
 
-// add a new record
+// ADD
 func (m *Manager) AddRecord(name *string) error {
 	records, err := m.ReadRecord()
 	if err != nil {
-		return fmt.Errorf("❌ Error reading records: %w", err)
+		logger.Error("Error reading records", "error", err)
+		return err
 	}
 
 	newRecord := types.Record{
-		ID:   len(records),
+		ID:   len(records) + 1,
 		Name: *name,
 	}
-
 	records = append(records, newRecord)
 
-	// marshal (convert go to json)
 	if err := m.SaveRecords(records); err != nil {
+		logger.Error("Error saving records", "error", err)
 		return err
 	}
 
-	fmt.Printf("✅ Added Record: \"Id: %d, Name: %q\" successfully!\n", newRecord.ID, newRecord.Name)
+	logger.Info("Record added successfully", "id", newRecord.ID, "name", newRecord.Name)
 	return nil
 }
 
-// read all records
+// LIST
 func (m *Manager) ListRecord() ([]types.Record, error) {
 	records, err := m.ReadRecord()
 	if err != nil {
+		logger.Error("Error reading records", "error", err)
 		return nil, err
 	}
+
 	if len(records) == 0 {
-		fmt.Printf("ℹ️ No records found in %q\n	", m.fileName)
+		logger.Info("No records found", "file", m.fileName)
 		return nil, nil
 	}
 
-	fmt.Println("📋 List of Records:")
-	for _, record := range records {
-		fmt.Printf("  - ID: %d, Name: %s\n", record.ID, record.Name)
-	}
+	logger.Info("Records fetched successfully", "count", len(records))
 	return records, nil
 }
+
+// DELETE
 func (m *Manager) DeleteRecord(id int) error {
 	if id <= 0 {
+		logger.Warn("Invalid record ID", "id", id)
 		return ErrInvalidId
 	}
 
 	records, err := m.ReadRecord()
 	if err != nil {
+		logger.Error("Error reading records", "error", err)
 		return err
 	}
 
+	newRecords := []types.Record{}
 	found := false
-	newRecord := []types.Record{}
-	for _, record := range records {
-		if record.ID == id {
+	for _, r := range records {
+		if r.ID == id {
 			found = true
 			continue
-		} else {
-			newRecord = append(newRecord, record)
 		}
+		newRecords = append(newRecords, r)
 	}
 
 	if !found {
+		logger.Warn("Record not found", "id", id)
 		return ErrNotFound
 	}
 
-	// reassign IDs (so they remain sequential)
-	for i := range newRecord {
-		newRecord[i].ID = i + 1
+	// Reassign sequential IDs
+	for i := range newRecords {
+		newRecords[i].ID = i + 1
 	}
 
-	// marshal (convert go to json)
-	m.SaveRecords(newRecord)
+	if err := m.SaveRecords(newRecords); err != nil {
+		logger.Error("Error saving records after delete", "error", err)
+		return err
+	}
 
-	fmt.Printf("🗑️  Deleted record with ID %d\n", id)
+	logger.Info("Record deleted", "id", id)
 	return nil
 }
 
-// update a record
+// UPDATE
 func (m *Manager) UpdateRecord(id int, newName string) error {
-	if id == 0 {
+	if id <= 0 {
+		logger.Warn("Invalid record ID", "id", id)
 		return ErrInvalidId
 	}
 	if newName == "" {
+		logger.Warn("Empty new name provided", "id", id)
 		return ErrEmptyName
 	}
 
 	records, err := m.ReadRecord()
 	if err != nil {
+		logger.Error("Error reading records", "error", err)
 		return err
 	}
 
 	found := false
-	for i, r := range records {
-		if r.ID == id {
+	for i := range records {
+		if records[i].ID == id {
 			found = true
 			records[i].Name = newName
 			break
@@ -109,13 +116,15 @@ func (m *Manager) UpdateRecord(id int, newName string) error {
 	}
 
 	if !found {
+		logger.Warn("Record not found for update", "id", id)
 		return ErrNotFound
 	}
 
-	// marshal (convert go to json)
 	if err := m.SaveRecords(records); err != nil {
+		logger.Error("Error saving updated records", "error", err)
 		return err
 	}
-	fmt.Printf("✏️  Updated record ID %d → New Name: %s\n", id, newName)
+
+	logger.Info("Record updated", "id", id, "newName", newName)
 	return nil
 }

@@ -5,100 +5,168 @@ import (
 	"fmt"
 	"os"
 
+	logger "github.com/thissidemayur/cli-json-manager"
 	"github.com/thissidemayur/cli-json-manager/internal/cli/commands"
 )
 
 func main() {
-	// global flag share across all commands
-	fileFlag := flag.String("file", "data.json", "JSON file to store data (default: data.json)")
+	// Detect environment (default: dev)
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "dev"
+	}
 
-	// parse only top-level (global) flags so user can do: cli-json-manager --file=user.json add...
+	// Initialize logger
+	logger.InitLogger(env)
+
+	// Global flags
+	fileFlag := flag.String("file", "data.json", "Path to JSON file (default: data.json)")
 	flag.Parse()
 
-	// ensure subcommand are provided like add, list, delete, update
 	if flag.NArg() < 1 {
-		fmt.Println("❌ Missing command.")
-		fmt.Println("Usage: cli-json-manager [--file <fileName] <command> [options]")
-		fmt.Println("Commands: add, list, delete, update")
+		printUsage()
 		os.Exit(1)
 	}
 
-	// first positional argument- subcommand (add, list, delete, update)
 	cmd := flag.Arg(0)
 
+	// Handle subcommands
 	switch cmd {
-	// ---------------- ADD ----------------
 	case "add":
-		addCmd := flag.NewFlagSet("add", flag.ExitOnError)
-		name := addCmd.String("name", "", "Name to add")
-		addCmd.Parse(flag.Args()[1:]) // parse arguments *after* add
-		if *name == "" {
-			fmt.Println("❌ missing required flag: --name")
-			os.Exit(2)
-		}
-		mgr, err := commands.NewManager(*fileFlag)
-		if err != nil {
-			fmt.Println("❌ Error creating manager:", err)
-			os.Exit(3)
-
-		}
-		if err := mgr.AddRecord(name); err != nil {
-			fmt.Println(err)
-			os.Exit(4)
-		}
-
-	//  ---------------- LIST ----------------
+		runAdd(*fileFlag)
 	case "list":
-		listCmd := flag.NewFlagSet("list", flag.ExitOnError)
-		listCmd.Parse(flag.Args()[1:])
-		mgr, err := commands.NewManager(*fileFlag)
-		if err != nil {
-			fmt.Println("❌ Error creating manager:", err)
-			os.Exit(3)
-		}
-		_, err = mgr.ListRecord();
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(3)
-		}
-
-	//  ---------------- DELETE ----------------
+		runList(*fileFlag)
 	case "delete":
-		deleteCmd := flag.NewFlagSet("delete", flag.ExitOnError)
-		deleteId := deleteCmd.Int("id", 0, "Id to delete")
-		deleteCmd.Parse(flag.Args()[1:])
-		mgr, err := commands.NewManager(*fileFlag)
-		if err != nil {
-			fmt.Println("❌ Error creating manager:", err)
-			os.Exit(3)
-		}
-		if err := mgr.DeleteRecord(*deleteId); err != nil {
-			fmt.Println(err)
-			os.Exit(4)
-		}
-
-	//  ---------------- UPDATE ----------------
+		runDelete(*fileFlag)
 	case "update":
-		updateCmd := flag.NewFlagSet("update", flag.ExitOnError)
-		updateId := updateCmd.Int("id", 0, "Id to update")
-		updateName := updateCmd.String("name", "", "New Name")
-		updateCmd.Parse(flag.Args()[1:])
-
-		mgr, err := commands.NewManager(*fileFlag)
-		if err != nil {
-			fmt.Println("❌ Error creating manager:", err)
-			os.Exit(3)
-		}
-		if err := mgr.UpdateRecord(*updateId, *updateName); err != nil {
-			fmt.Println(err)
-			os.Exit(4)
-		}
-
-	//  ---------------- DEFAULT/UNKNOWN COMMAND ----------------
+		runUpdate(*fileFlag)
 	default:
-		fmt.Println("❌ Unknown command: ", cmd)
-		fmt.Println("Available commands: add, list, delete, update")
+		logger.Error("Unknown command", "command", cmd)
+		printUsage()
 		os.Exit(1)
-
 	}
+}
+
+// ============================ COMMAND HANDLERS ============================
+
+// ADD
+func runAdd(file string) {
+	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
+	name := addCmd.String("name", "", "Name to add")
+	addCmd.Parse(flag.Args()[1:])
+
+	if *name == "" {
+		fmt.Println("❌ Missing required flag: --name")
+		os.Exit(2)
+	}
+
+	mgr, err := commands.NewManager(file)
+	if err != nil {
+		logger.Error("Error creating manager", "error", err)
+		fmt.Println("⚠️  Failed to initialize manager.")
+		os.Exit(3)
+	}
+
+	if err := mgr.AddRecord(name); err != nil {
+		logger.Error("Error adding record", "error", err)
+		fmt.Println("❌ Failed to add record:", err)
+		os.Exit(4)
+	}
+
+	fmt.Printf("✅ Added record: %q successfully!\n", *name)
+}
+
+// LIST
+func runList(file string) {
+	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+	listCmd.Parse(flag.Args()[1:])
+
+	mgr, err := commands.NewManager(file)
+	if err != nil {
+		logger.Error("Error creating manager", "error", err)
+		fmt.Println("⚠️  Failed to initialize manager.")
+		os.Exit(3)
+	}
+
+	records, err := mgr.ListRecord()
+	if err != nil {
+		logger.Error("Error listing records", "error", err)
+		fmt.Println("❌ Failed to list records:", err)
+		os.Exit(4)
+	}
+
+	if len(records) == 0 {
+		fmt.Println("ℹ️  No records found.")
+		return
+	}
+
+	fmt.Println("\n📋 List of Records:")
+	for _, record := range records {
+		fmt.Printf("  - ID: %-3d Name: %s\n", record.ID, record.Name)
+	}
+}
+
+// DELETE
+func runDelete(file string) {
+	deleteCmd := flag.NewFlagSet("delete", flag.ExitOnError)
+	id := deleteCmd.Int("id", 0, "ID to delete")
+	deleteCmd.Parse(flag.Args()[1:])
+
+	mgr, err := commands.NewManager(file)
+	if err != nil {
+		logger.Error("Error creating manager", "error", err)
+		fmt.Println("⚠️  Failed to initialize manager.")
+		os.Exit(3)
+	}
+
+	if err := mgr.DeleteRecord(*id); err != nil {
+		logger.Error("Error deleting record", "id", *id, "error", err)
+		fmt.Printf("❌ Failed to delete record with ID %d: %v\n", *id, err)
+		os.Exit(4)
+	}
+
+	fmt.Printf("🗑️  Deleted record with ID %d successfully.\n", *id)
+}
+
+// UPDATE
+func runUpdate(file string) {
+	updateCmd := flag.NewFlagSet("update", flag.ExitOnError)
+	id := updateCmd.Int("id", 0, "ID to update")
+	name := updateCmd.String("name", "", "New name")
+	updateCmd.Parse(flag.Args()[1:])
+
+	mgr, err := commands.NewManager(file)
+	if err != nil {
+		logger.Error("Error creating manager", "error", err)
+		fmt.Println("⚠️  Failed to initialize manager.")
+		os.Exit(3)
+	}
+
+	if err := mgr.UpdateRecord(*id, *name); err != nil {
+		logger.Error("Error updating record", "id", *id, "error", err)
+		fmt.Printf("❌ Failed to update record with ID %d: %v\n", *id, err)
+		os.Exit(4)
+	}
+
+	fmt.Printf("✏️  Updated record ID %d → %q successfully.\n", *id, *name)
+}
+
+// USAGE HELP
+func printUsage() {
+	fmt.Println(`
+Usage:
+  cli-json-manager [--file <fileName>] <command> [options]
+
+Commands:
+  add     --name <string>         Add a new record
+  list                           List all records
+  delete  --id <int>             Delete a record by ID
+  update  --id <int> --name <string>  Update record name
+
+Examples:
+  cli-json-manager add --name "Bhawaniputra"
+  cli-json-manager list
+  cli-json-manager delete --id 2
+  cli-json-manager update --id 3 --name "TaraPutra"
+`)
 }

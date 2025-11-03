@@ -1,0 +1,9 @@
+{"time":"2025-11-03T11:05:01.404436495+05:30","level":"INFO","msg":"✅ Logger initialized successfully","env":"prod"}
+{"time":"2025-11-03T11:05:01.404562118+05:30","level":"WARN","msg":"Record not found","id":90}
+{"time":"2025-11-03T11:05:01.404575187+05:30","level":"ERROR","msg":"Error deleting record","id":90,"error":"record not found"}
+{"time":"2025-11-03T11:05:08.069119615+05:30","level":"INFO","msg":"✅ Logger initialized successfully","env":"prod"}
+{"time":"2025-11-03T11:05:08.06927148+05:30","level":"WARN","msg":"Record not found","id":90}
+{"time":"2025-11-03T11:05:08.069284308+05:30","level":"ERROR","msg":"Error deleting record","id":90,"error":"record not found"}
+{"time":"2025-11-03T11:05:16.076771239+05:30","level":"INFO","msg":"✅ Logger initialized successfully","env":"prod"}
+{"time":"2025-11-03T11:05:16.076928393+05:30","level":"WARN","msg":"Record not found","id":90}
+{"time":"2025-11-03T11:05:16.07694063+05:30","level":"ERROR","msg":"Error deleting record","id":90,"error":"record not found"}

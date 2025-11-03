@@ -9,7 +9,7 @@ import (
 	"github.com/thissidemayur/cli-json-manager/internal/types"
 )
 
-func readJSONFile(filePath string)([]types.Record , error){
+func readJSONFile(filePath string) ([]types.Record, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -21,21 +21,21 @@ func readJSONFile(filePath string)([]types.Record , error){
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return records, nil
 }
 
-func TestAddRecord(t *testing.T){
+func TestAddRecord(t *testing.T) {
 	// create a temprory json file
-	tmpFile,err:=os.CreateTemp("", "test_data_*.json")
+	tmpFile, err := os.CreateTemp("", "test_data_*.json")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())// clean up after test(even test fails)
+	defer os.Remove(tmpFile.Name()) // clean up after test(even test fails)
 	defer tmpFile.Close()
 
 	record := types.Record{
-		ID: 0,
+		ID:   0,
 		Name: "Mayur",
 	}
 	// initialize Manager with temp file
@@ -47,13 +47,13 @@ func TestAddRecord(t *testing.T){
 		t.Fatalf("AddRecord() failed: %v", err)
 	}
 
-	// verify record 
-	data,err :=readJSONFile(tmpFile.Name())
+	// verify record
+	data, err := readJSONFile(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("Failed to read JSON file: %v", err)
 	}
 
-	if len(data) !=1 {
+	if len(data) != 1 {
 		t.Fatalf("Expected 1 record, got %d", len(data))
 	}
 
@@ -67,23 +67,23 @@ func TestAddRecord(t *testing.T){
 
 func TestListRecord(t *testing.T) {
 	// create  tempraory file
-	tmpFile,err:=os.CreateTemp("", "test_data_*.json");
+	tmpFile, err := os.CreateTemp("", "test_data_*.json")
 	if err != nil {
-		t.Fatalf("Failed to create temp file: %v",err)
+		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	defer tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
 
 	// write mock data into the file
-	data:=[]types.Record{
-		{Name: "bhawaniputra",ID: 0},
-		{Name:"taraPutra",ID: 1},
-		{Name:"kaliPutra",ID: 2},
+	data := []types.Record{
+		{Name: "bhawaniputra", ID: 0},
+		{Name: "taraPutra", ID: 1},
+		{Name: "kaliPutra", ID: 2},
 	}
 
-	records,_ :=json.MarshalIndent(data,""," ")
-	
-	os.WriteFile(tmpFile.Name(),records,0644)
+	records, _ := json.MarshalIndent(data, "", " ")
+
+	os.WriteFile(tmpFile.Name(), records, 0644)
 
 	// now matching data with our input
 	m := Manager{fileName: tmpFile.Name()}
@@ -139,11 +139,11 @@ func TestDeleteRecord(t *testing.T) {
 		t.Errorf("Expected 2 records after deletion, got %d", len(remainingRecords))
 	}
 
-	for _,record := range remainingRecords{
-		if record.ID == 0  && record.Name != "alpha"{
+	for _, record := range remainingRecords {
+		if record.ID == 0 && record.Name != "alpha" {
 			t.Errorf("Expected Name 'alpha' for ID 0, got %s", record.Name)
-	}
-		if record.ID == 2 && record.Name != "gamma"{
+		}
+		if record.ID == 2 && record.Name != "gamma" {
 			t.Errorf("Expected Name 'gamma' for ID 2, got %s", record.Name)
 		}
 	}
@@ -173,7 +173,7 @@ func TestUpdateRecord(t *testing.T) {
 		t.Fatalf("Failed to write JSON file: %v", err)
 	}
 	// update record with id 1
-	m:= Manager{fileName: tmpFile.Name()}
+	m := Manager{fileName: tmpFile.Name()}
 	err = m.UpdateRecord(1, "zeta")
 	if err != nil {
 		t.Fatalf("UpdateRecord() failed: %v", err)
